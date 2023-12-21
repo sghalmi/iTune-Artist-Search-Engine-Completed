@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+   <title> 493 Artist Search</title>
+   <!--Bootstrap-->
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+      integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+   <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+      integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+      crossorigin="anonymous"></script>
+   <!--Custom Style-->
+   <link rel="stylesheet" type="text/css" href="index.css">
+   <!--Vue-->
+   <script src="https://unpkg.com/vue@3"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"></script>
+</head>
+
+<body>
+   <div id='app'>
+      <nav class="navbar navbar-default">
+         <div class="container">
+            <div class="navbar-header">
+               <h3>493 Artist Search</h3>
+            </div>
+         </div>
+      </nav>
+      <div v-bind="objectOfAttrs"></div>
+      <div class="container">
+         <div class="row searchbar">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+               <!--regulates width-->
+               <h4>Enter the name of the artist and press enter: </h4>
+               <input type="text" v-on:keyup.enter="search" />
+               <!--this is where the search bar is, call this function and see if the value is enter, when u press enter it will call the function ur wrote in the scropt-->
+               <h4>Search Result (Total Found {{search_num}})</h4>
+               <div>
+                  <button :class="[allClicked ? 'btn btn-success' : 'btn btn-default' ]"
+                     v-on:click="all_show" v-show="showall_button">ALL</button>
+                  <span v-for="(set,index) in sortedgen" :key="index">
+                     <button :class="[isClicked[index] ? 'btn btn-primary' : 'btn btn-default']"
+                        v-on:click="sortgen(index)">{{set}}</button>
+                  </span>
+               </div>
+               <div class="col-lg-12 col-md-12 col-sm-12">
+                  <h4>
+                     List of results
+                  </h4>
+                  <div class="dropdown">
+                     <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Sort list of
+                        results by
+                        <span class="caret"></span></button>
+                     <!-- Trigger the modal with a button -->
+                     <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">Song
+                        List</button>
+                     <ul class="dropdown-menu">
+                        <li :class="{active : resetorgin}"><a v-on:click="reset_orgi">Reset to original</a></li>
+                        <li :class="{active : collectname_sort}"><a v-on:click="sort_name">Collection Name</a></li>
+                        <li :class="{active : pricesort}"><a v-on:click="sort_price">Price</a></li>
+                     </ul>
+                  </div>
+               </div>
+
+               <!-- Modal -->
+               <div id="myModal" class="modal fade" role="dialog">
+                  <div class="modal-dialog">
+
+                     <!-- Modal content-->
+                     <div class="modal-content">
+                        <div class="modal-header">
+                           <button type="button" class="close" data-dismiss="modal">&times;</button>
+                           <h4 class="modal-title">Collection Name of Results</h4>
+                        </div>
+                        <div class="modal-body">
+                           <div v-for="(result,index) in results" class="result">
+                              <p> - {{result.collectionName}}<br /></p>
+                           </div>
+                        </div>
+                        <div class="modal-footer">
+                           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                     </div>
+
+                  </div>
+               </div>
+               <div>
+                  <div v-for="(result, index) in results" class="result">
+                     <div class='col-lg-6 col-md-6 col-sm-6 artist'>
+                        <div class='artist-albumcover col-sm-4'>
+                           <img :src="result.artworkUrl100">
+                        </div>
+                        <div class='artist-info col-sm-6'>
+                           <ul class="nav nav-tabs">
+                              <li class="active"><a data-toggle="tab" id="descr"
+                                    v-on:click="changeTab(index)">Description</a>
+                              </li>
+                              <li><a data-toggle="tab" id="track" v-on:click="changeTab1(index)">Track Info.</a>
+                              </li>
+                           </ul>
+                           <div class="tab-content flex-row">
+                              <div v-if="tab[index]==0" id="descr">
+                                 <div v-if="result.artistName == ''">
+                                    <b>Artist:</b> No information provided <br />
+                                 </div>
+                                 <div v-else>
+                                    <b>Artist:</b> {{result.artistName}}<br />
+                                 </div>
+
+                                 <div v-if="result.collectionName == ''">
+                                    <b>Collection Name:</b> No information provided <br />
+                                 </div>
+                                 <div v-else>
+                                    <b>Collection Name:</b> {{result.collectionName}}<br />
+                                 </div>
+
+                                 <div v-if="result.trackPrice>=0">
+                                    <b>Price:</b> {{result.trackPrice}}<br />
+                                 </div>
+                                 <div v-else>
+                                    <b>Price:</b> 0 <br />
+                                 </div>
+
+                                 <div v-if="result.kind == ''">
+                                    <b>Kind:</b> No information provided <br />
+                                 </div>
+                                 <div v-else>
+                                    <b>Kind:</b> {{result.kind}}<br />
+                                 </div>
+
+                                 <div v-if="result.previewUrl == ''">
+                                    <b>Preview:</b> No information provided <br />
+                                 </div>
+                                 <div v-else>
+                                    <b>Preview:</b><a v-bind:href="result.previewUrl">Link</a><br />
+                                 </div>
+                                 <div>
+                                    <button v-if="song_play[index]==0" v-on:click="play_music(index)">Play</button>
+                                    <button v-else v-on:click="pause_music(index)">Pause</button>
+                                 </div>
+
+                              </div>
+                              <div v-else id="track">
+                                 <b>Track ID:</b> {{result.trackId}}<br />
+                                 <b>Country:</b> {{result.country}}<br />
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <script src="script.js"></script>
+</body>
+
+</html>
